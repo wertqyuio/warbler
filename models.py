@@ -181,3 +181,21 @@ def connect_db(app):
 
     db.app = app
     db.init_app(app)
+
+
+class Likes(db.Model):
+    """Table of likes for messages."""
+
+    __tablename__ = 'likes'
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete="cascade"),
+        primary_key=True,
+    )
+
+    message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('messages.id', ondelete="cascade"),
+        primary_key=True,
+    )

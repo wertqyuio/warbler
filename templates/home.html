@@ -41,8 +41,7 @@
     <div class="col-lg-6 col-md-8 col-sm-12">
       <ul class="list-group" id="messages">
         {% for msg in messages %}
-          <li class="list-group-item">
-            <a href="/messages/{{ msg.id  }}" class="message-link"/>
+          <li class="list-group-item">  
             <a href="/users/{{ msg.user.id }}">
               <img src="{{ msg.user.image_url }}" alt="" class="timeline-image">
             </a>
@@ -50,6 +49,17 @@
               <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
               <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
               <p>{{ msg.text }}</p>
+              
+            
+                {% if true %}
+                <form action="/messages/{{ msg.id  }}/likes" method="POST">
+                  
+                  <a>
+                  
+                  <button action="submit" style="background-color:transparent; border:none;">
+                  <i class="far fa-heart"></i></button></a>
+                </form>
+                {% endif %}
             </div>
           </li>
         {% endfor %}
