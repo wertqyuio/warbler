@@ -88,13 +88,16 @@ class User(db.Model):
         secondaryjoin=(Follows.user_following_id == id)
     )
 
+    likes = db.relationship('Message', secondary="likes", backref="fans")
+
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
 
     def is_followed_by(self, other_user):
         """Is this user followed by `other_user`?"""
 
-        found_user_list = [user for user in self.followers if user == other_user]
+        found_user_list = [user for user in self.followers if user ==
+                           other_user]
         return len(found_user_list) == 1
 
     def is_following(self, other_user):
