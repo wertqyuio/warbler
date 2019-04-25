@@ -118,7 +118,7 @@ class User(db.Model):
         """
 
         hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
-
+        
         user = User(
             username=username,
             email=email,
@@ -141,6 +141,7 @@ class User(db.Model):
         """
 
         user = cls.query.filter_by(username=username).first()
+        print(user)
 
         if user:
             is_auth = bcrypt.check_password_hash(user.password, password)

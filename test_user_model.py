@@ -9,6 +9,8 @@ import os
 from unittest import TestCase
 
 from models import db, User, Message, Follows
+from sqlalchemy.exc import InvalidRequestError
+from psycopg2 import IntegrityError
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -134,3 +136,86 @@ class UserModelTestCase(TestCase):
         db.session.commit()
         new_count = User.query.count()
         self.assertEqual(new_count, count+1)
+
+    def test_fail_user(self):
+        u = {
+            "email": "test@test.com",
+            "username": "testuser",
+            "password": "HASHED_PASSWORD",
+            "image_url": "https:kskljlsfkjfk"
+        }
+
+        u2 = {
+            "email": "test2@test.com",
+            "username": "testuser",
+            "password": "HASHED_PASSWORD",
+            "image_url": "https:kskljlsfkjfk"
+
+        }
+
+        
+        new_user = User.signup(u["username"], u["email"], u["password"],
+                               u["image_url"])
+        db.session.add(new_user)
+        db.session.commit()
+        count = User.query.count()
+        try:
+            
+            new_user_two = User.signup(u2["username"], u2["email"],
+                                       u2["password"],
+                                       u2["image_url"])
+            db.session.add(new_user_two)
+            db.session.rollback()
+
+        except:   
+            pass
+            
+        db.session.commit()
+        new_count = User.query.count()
+        self.assertEqual(new_count, count)
+
+    def test_authenticate_user(self):
+        u = {
+            "email": "test@test.com",
+            "username": "testuser",
+            "password": "HASHED_PASSWORD",
+            "image_url": "https:kskljlsfkjfk"
+        }
+        new_user = User.signup(u["username"], u["email"], u["password"],
+                               u["image_url"])
+        db.session.add(new_user)
+        db.session.commit()
+        test_user = User.authenticate(u["username"], u["password"])
+        self.assertEqual(new_user, test_user)
+    
+    def test_authenticate_username_fail(self):
+        u = {
+            "email": "test@test.com",
+            "username": "testuser",
+            "password": "HASHED_PASSWORD",
+            "image_url": "https:kskljlsfkjfk"
+        }
+        new_user = User.signup(u["username"], u["email"], u["password"],
+                               u["image_url"])
+        db.session.add(new_user)
+        db.session.commit()
+
+        test_user = User.authenticate("test", u["password"])
+        self.assertEqual(test_user, False)
+
+    def test_authenticate_password_fail(self):
+        u = {
+            "email": "test@test.com",
+            "username": "testuser",
+            "password": "HASHED_PASSWORD",
+            "image_url": "https:kskljlsfkjfk"
+        }
+        new_user = User.signup(u["username"], u["email"], u["password"],
+                               u["image_url"])
+        db.session.add(new_user)
+        db.session.commit()
+
+        test_user = User.authenticate(u["username"], new_user.password)
+        self.assertEqual(test_user, False)
+
+    

@@ -94,6 +94,7 @@ def login():
     """Handle user login."""
 
     form = LoginForm()
+    print(form.validate_on_submit())
 
     if form.validate_on_submit():
         user = User.authenticate(form.username.data,
@@ -369,7 +370,6 @@ def homepage():
 @app.after_request
 def add_header(req):
     """Add non-caching headers on every request."""
-
     req.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     req.headers["Pragma"] = "no-cache"
     req.headers["Expires"] = "0"
