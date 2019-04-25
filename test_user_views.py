@@ -9,8 +9,6 @@ import os
 from unittest import TestCase
 
 from models import db, User, Message, Follows
-from sqlalchemy.exc import InvalidRequestError
-from psycopg2 import IntegrityError
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -40,7 +38,7 @@ class UserViewModel(TestCase):
         User.query.delete()
         Message.query.delete()
         Follows.query.delete()
-    
+
         u = {
             "email": "test@test.com",
             "username": "testuser",
@@ -60,27 +58,32 @@ class UserViewModel(TestCase):
         response = self.client.post('/login', data={"username": "testuser",
                                                     "password":
                                                     "HASHED_PASSWORD"})
-        print(response)
         self.assertEqual(response.status_code, 302)
 
     def test_followers(self):
-        response = self.client.post('/login', data={"username": "testuser",
-                                                    "password":
-                                                    "HASHED_PASSWORD"})
-    
+        self.client.post('/login', data={"username": "testuser",
+                                         "password":
+                                         "HASHED_PASSWORD"})
+
         user = User.query.filter_by(username="testuser").first()
 
         response_followers = self.client.get(f'/users/{user.id}/followers')
 
         self.assertEqual(response_followers.status_code, 200)
 
-    def test_following(self):
-        response = self.client.post('/login', data={"username": "testuser",
-                                                    "password":
-                                                    "HASHED_PASSWORD"})
-    
+    def test_logged_in_following(self):
+        self.client.post('/login', data={"username": "testuser",
+                                         "password": "HASHED_PASSWORD"})
+
         user = User.query.filter_by(username="testuser").first()
 
         response_following = self.client.get(f'/users/{user.id}/following')
 
         self.assertEqual(response_following.status_code, 200)
+
+    def test_logged_out_following(self):
+        user = User.query.filter_by(username="testuser").first()
+
+        response_following = self.client.get(f'/users/{user.id}/following')
+
+        self.assertEqual(response_following.status_code, 302)

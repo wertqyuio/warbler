@@ -1,10 +1,13 @@
 import os
 
-from flask import Flask, render_template, request, flash, redirect, session, g
+from flask import (Flask, render_template, request, flash, redirect,
+                   session, g,url_for)
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
+from functools import wraps
 
-from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
+from forms import (UserAddForm, LoginForm, MessageForm, UserEditForm,
+                   ChangePasswordForm)
 from models import db, connect_db, User, Message, Likes
 
 CURR_USER_KEY = "curr_user"
@@ -94,7 +97,6 @@ def login():
     """Handle user login."""
 
     form = LoginForm()
-    print(form.validate_on_submit())
 
     if form.validate_on_submit():
         user = User.authenticate(form.username.data,
@@ -120,6 +122,19 @@ def logout():
         flash("Successfully logged out!")
 
     return redirect("/login")
+
+##############################################################################
+# Added decorators
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not g.user:
+            flash("Access unauthorized.", "danger")
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 ##############################################################################
@@ -160,48 +175,36 @@ def users_show(user_id):
 
 
 @app.route('/users/<int:user_id>/following')
+@login_required
 def show_following(user_id):
     """Show list of people this user is following."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     user = User.query.get_or_404(user_id)
     return render_template('users/following.html', user=user)
 
 
 @app.route('/users/<int:user_id>/followers')
+@login_required
 def users_followers(user_id):
     """Show list of followers of this user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     user = User.query.get_or_404(user_id)
     return render_template('users/followers.html', user=user)
 
 
 @app.route('/users/<int:user_id>/likes')
+@login_required
 def messages_liked(user_id):
     """ Show list of all messages liked by this user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     user = User.query.get_or_404(user_id)
     return render_template('users/likes.html', user=user)
 
 
 @app.route('/users/follow/<int:follow_id>', methods=['POST'])
+@login_required
 def add_follow(follow_id):
     """Add a follow for the currently-logged-in user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     followee = User.query.get_or_404(follow_id)
     g.user.following.append(followee)
@@ -211,12 +214,9 @@ def add_follow(follow_id):
 
 
 @app.route('/users/stop-following/<int:follow_id>', methods=['POST'])
+@login_required
 def stop_following(follow_id):
     """Have currently-logged-in-user stop following this user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     followee = User.query.get(follow_id)
     g.user.following.remove(followee)
@@ -253,13 +253,30 @@ def profile():
     return render_template("/users/edit.html", form=form, user=user)
 
 
+@app.route('/users/profile/password', methods=["GET", "POST"])
+@login_required
+def change_password():
+    form = ChangePasswordForm()
+
+    if form.validate_on_submit():
+        user = g.user.change_password(g.user.username,
+                                      form.old_pwd.data,
+                                      form.new_pwd.data,
+                                      form.cfm_pwd.data)
+        if user:
+            g.user = user
+            flash("Password Successfully Changed!")
+            return redirect("/users/profile")
+        else:
+            flash("The old pwd is wrong or your new pwds dont match", "danger")
+
+    return render_template("/users/password.html", form=form)
+
+
 @app.route('/users/delete', methods=["POST"])
+@login_required
 def delete_user():
     """Delete user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     do_logout()
 
@@ -273,15 +290,12 @@ def delete_user():
 # Messages routes:
 
 @app.route('/messages/new', methods=["GET", "POST"])
+@login_required
 def messages_add():
     """Add a message:
 
     Show form if GET. If valid, update message and redirect to user page.
     """
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     form = MessageForm()
 
@@ -318,12 +332,9 @@ def messages_likes(message_id):
 
 
 @app.route('/messages/<int:message_id>/delete', methods=["POST"])
+@login_required
 def messages_destroy(message_id):
     """Delete a message."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     msg = Message.query.get(message_id)
     db.session.delete(msg)
@@ -375,3 +386,4 @@ def add_header(req):
     req.headers["Expires"] = "0"
     req.headers['Cache-Control'] = 'public, max-age=0'
     return req
+

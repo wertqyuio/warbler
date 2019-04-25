@@ -110,6 +110,25 @@ class User(db.Model):
                            other_user]
         return len(found_user_list) == 1
 
+    def change_password(self, username, old_pwd, new_pwd, cfm_pwd):
+        """Change the password, when user successfully
+           inputs old password, new password, and retypes
+           new password -> 'cfm_pwd' short for confirm"""
+
+        user = User.query.filter_by(username=username).first()
+
+        if (
+                bcrypt.check_password_hash(user.password, old_pwd) and
+                new_pwd == cfm_pwd
+           ):
+            user.password = bcrypt.generate_password_hash(
+                            new_pwd).decode('UTF-8')
+            db.session.commit()
+            user = User.query.filter_by(username=username).first()
+            return user
+        else:
+            return False
+
     @classmethod
     def signup(cls, username, email, password, image_url):
         """Sign up user.
@@ -118,7 +137,7 @@ class User(db.Model):
         """
 
         hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
-        
+
         user = User(
             username=username,
             email=email,
@@ -141,7 +160,6 @@ class User(db.Model):
         """
 
         user = cls.query.filter_by(username=username).first()
-        print(user)
 
         if user:
             is_auth = bcrypt.check_password_hash(user.password, password)

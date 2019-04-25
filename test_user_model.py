@@ -9,8 +9,6 @@ import os
 from unittest import TestCase
 
 from models import db, User, Message, Follows
-from sqlalchemy.exc import InvalidRequestError
-from psycopg2 import IntegrityError
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -100,7 +98,8 @@ class UserModelTestCase(TestCase):
         self.assertEqual(u.is_followed_by(u2), False)  # u ISN'T followed by u2
 
     def test_user_not_following(self):
-        """Does is following return true when u follows u2"""
+        """Does is following return false when we check if u follows u2,
+           when u2 follows u"""
 
         u = User(
             email="test@test.com",
@@ -153,23 +152,21 @@ class UserModelTestCase(TestCase):
 
         }
 
-        
         new_user = User.signup(u["username"], u["email"], u["password"],
                                u["image_url"])
         db.session.add(new_user)
         db.session.commit()
         count = User.query.count()
         try:
-            
             new_user_two = User.signup(u2["username"], u2["email"],
                                        u2["password"],
                                        u2["image_url"])
             db.session.add(new_user_two)
             db.session.rollback()
 
-        except:   
+        except:
             pass
-            
+
         db.session.commit()
         new_count = User.query.count()
         self.assertEqual(new_count, count)
@@ -187,7 +184,7 @@ class UserModelTestCase(TestCase):
         db.session.commit()
         test_user = User.authenticate(u["username"], u["password"])
         self.assertEqual(new_user, test_user)
-    
+
     def test_authenticate_username_fail(self):
         u = {
             "email": "test@test.com",
@@ -215,7 +212,5 @@ class UserModelTestCase(TestCase):
         db.session.add(new_user)
         db.session.commit()
 
-        test_user = User.authenticate(u["username"], new_user.password)
+        test_user = User.authenticate(u["username"], "bad password")
         self.assertEqual(test_user, False)
-
-    
