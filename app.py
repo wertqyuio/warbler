@@ -121,7 +121,6 @@ def logout():
     return redirect("/login")
 
 
-
 ##############################################################################
 # General user routes:
 
@@ -247,7 +246,7 @@ def profile():
         user.header_image_url = form.header_image_url.data
         user.bio = form.bio.data
         db.session.commit()
-        
+
         return redirect(f"/users/{user.id}")
 
     return render_template("/users/edit.html", form=form, user=user)
@@ -305,7 +304,7 @@ def messages_show(message_id):
 
 @app.route('/messages/<int:message_id>/likes', methods=["POST"])
 def messages_likes(message_id):
-    
+
     unlikes = Likes.query.get((g.user.id, message_id))
     if unlikes:
         db.session.delete(unlikes)

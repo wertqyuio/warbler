@@ -106,7 +106,8 @@ class User(db.Model):
     def is_following(self, other_user):
         """Is this user following `other_use`?"""
 
-        found_user_list = [user for user in self.following if user == other_user]
+        found_user_list = [user for user in self.following if user ==
+                           other_user]
         return len(found_user_list) == 1
 
     @classmethod

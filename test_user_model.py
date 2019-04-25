@@ -56,3 +56,81 @@ class UserModelTestCase(TestCase):
         # User should have no messages & no followers
         self.assertEqual(len(u.messages), 0)
         self.assertEqual(len(u.followers), 0)
+
+    def test_user_repr(self):
+        """Does our __repr__ function work?"""
+
+        u = User(
+            email="test@test.com",
+            username="testuser",
+            password="HASHED_PASSWORD"
+        )
+
+        db.session.add(u)
+        db.session.commit()
+
+        self.assertEqual(u.__repr__(),
+                         f"<User #{u.id}: {u.username}, {u.email}>")
+
+    def test_user_following(self):
+        """Does is following return true when u follows u2"""
+
+        u = User(
+            email="test@test.com",
+            username="testuser",
+            password="HASHED_PASSWORD"
+        )
+
+        u2 = User(
+            email="test2@test.com",
+            username="testuser2",
+            password="HASHED_PASSWORD"
+        )
+
+        db.session.add(u)
+        db.session.add(u2)
+        u.following.append(u2)  # u is following u2
+
+        db.session.commit()
+
+        self.assertEqual(u.is_following(u2), True)  # u IS following u2
+        self.assertEqual(u2.is_followed_by(u), True)  # u2 IS followed by u
+        self.assertEqual(u.is_followed_by(u2), False)  # u ISN'T followed by u2
+
+    def test_user_not_following(self):
+        """Does is following return true when u follows u2"""
+
+        u = User(
+            email="test@test.com",
+            username="testuser",
+            password="HASHED_PASSWORD"
+        )
+
+        u2 = User(
+            email="test2@test.com",
+            username="testuser2",
+            password="HASHED_PASSWORD"
+        )
+
+        db.session.add(u)
+        db.session.add(u2)
+        u.followers.append(u2)
+
+        db.session.commit()
+
+        self.assertEqual(u.is_following(u2), False)
+
+    def test_new_user(self):
+        u = {
+            "email": "test@test.com",
+            "username": "testuser",
+            "password": "HASHED_PASSWORD",
+            "image_url": "https:kskljlsfkjfk"
+        }
+        count = User.query.count()
+        new_user = User.signup(u["username"], u["email"], u["password"],
+                               u["image_url"])
+        db.session.add(new_user)
+        db.session.commit()
+        new_count = User.query.count()
+        self.assertEqual(new_count, count+1)
