@@ -49,14 +49,12 @@
           <p>{{ msg.text }}</p>
 
 
-          <form action="/messages/{{ msg.id  }}/likes" method="POST">
-
+          <form>
             <a>
-              <button action="submit" style="background-color:transparent; border:none;">
                 {% if msg not in g.user.likes %}
-                <i class="far fa-heart"></i>
+                <i class="far fa-heart" id="{{ msg.id }}_is_message_id"></i>
                 {% else %}
-                <i class="fas fa-heart"></i>
+                <i class="fas fa-heart" id="{{ msg.id }}_is_message_id"></i>
                 {% endif %}
               </button></a>
           </form>

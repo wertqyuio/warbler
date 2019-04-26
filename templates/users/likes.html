@@ -21,9 +21,9 @@
           <a>
             <button action="submit" style="background-color:transparent; border:none;">
               {% if message not in g.user.likes %}
-              <i class="far fa-heart"></i>
+              <i class="far fa-heart" id="{{ message.id }}_is_message_id"></i>
               {% else %}
-              <i class="fas fa-heart"></i>
+              <i class="fas fa-heart" id="{{ message.id }}_is_message_id"></i>
               {% endif %}
             </button></a>
         </form>
