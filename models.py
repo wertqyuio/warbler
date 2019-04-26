@@ -225,3 +225,35 @@ class Likes(db.Model):
         db.ForeignKey('messages.id', ondelete="cascade"),
         primary_key=True,
     )
+
+
+class DirectMessages(db.Model):
+    """Tabel of direct messages."""
+
+    __tablename__ = "direct_messages"
+
+    message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('messages.id', ondelete="cascade"),
+        primary_key=True,
+    )
+
+    sender_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete="cascade"),
+        primary_key=True,
+    )
+
+    recipient_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete="cascade"),
+        primary_key=True,
+    )
+
+    @classmethod
+    def validate_message(cls, message_id, sender_id, recipient_id):
+        if cls.query.get((message_id, sender_id, recipient_id)):
+            return False
+        if sender_id == recipient_id:
+            return False
+        return True
